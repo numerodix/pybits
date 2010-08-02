@@ -14,8 +14,9 @@ import types
 
 
 class Dumper(object):
-    def __init__(self):
+    def __init__(self, collapse_duplicates=False):
         self.index = {}
+        self.collapse_duplicates = collapse_duplicates
 
     def is_hashable(self, obj):
         try:
@@ -115,7 +116,11 @@ class Dumper(object):
         if self.is_reference_type(obj):
             if obj in visited:
                 return self.dump_duplicate(obj, visited)
-            visited = visited.union([obj])
+
+            if self.collapse_duplicates:
+                visited.update([obj])
+            else:
+                visited = visited.union([obj])
 
         if self.is_iterable(obj):
             if self.is_dicty(obj):
@@ -130,10 +135,10 @@ class Dumper(object):
     def dump(self, obj):
         return self.dump_main(obj, set())
 
-def pp(st):
+def pp(st, collapse_duplicates=False):
     """Generic pretty print function to visualize object data recursively with
     cycle detection"""
-    dct = Dumper().dump(st)
+    dct = Dumper(collapse_duplicates=collapse_duplicates).dump(st)
     pprint.pprint(dct)
 
 
@@ -164,6 +169,16 @@ if __name__ == '__main__':
         d.refs = [c]
         return a
 
+    def test_instance_collapsed(heading="Instance {collapsed recursion}",
+                                collapse_duplicates=True):
+        Node = test_class()
+        a, b, c, d = Node('A'), Node('B'), Node('C'), Node('D')
+        a.refs = [b, d]
+        b.refs = [c]
+        c.refs = [a]
+        d.refs = [c]
+        return a
+
     ################################################
 
     def test_class_old(heading="Class (old style)"):
@@ -174,6 +189,17 @@ if __name__ == '__main__':
         return Node
 
     def test_instance_old(heading="Instance (old style)"):
+        """classatt shows up in dir()"""
+        Node = test_class_old()
+        a, b, c, d = Node('A'), Node('B'), Node('C'), Node('D')
+        a.refs = [b, d]
+        b.refs = [c]
+        c.refs = [a]
+        d.refs = [c]
+        return a
+
+    def test_instance_old_collapsed(heading="Instance (old style) {collapsed recursion}",
+                                   collapse_duplicates=True):
         """classatt shows up in dir()"""
         Node = test_class_old()
         a, b, c, d = Node('A'), Node('B'), Node('C'), Node('D')
@@ -213,9 +239,11 @@ if __name__ == '__main__':
 
         test_class,
         test_instance,
+        test_instance_collapsed,
 
         test_class_old,
         test_instance_old,
+        test_instance_old_collapsed,
 
         test_function,
         test_method,
@@ -225,7 +253,7 @@ if __name__ == '__main__':
         test_generator,
     ]
 
-    def runtest(obj, heading, doc=None):
+    def runtest(obj, heading, doc, *args, **kw):
         name = Dumper().get_object_name(obj)
         s = "#"*78 + "\n"
         s += " :%s\n" % heading
@@ -237,8 +265,9 @@ if __name__ == '__main__':
         s += " Type: %s\n" % type(obj).__name__
         s += "-"*78
         print(s)
-        pp(obj)
+        pp(obj, *args, **kw)
         print('\n')
 
     for testfunc in tests:
-        runtest(testfunc(), testfunc.func_defaults[0], testfunc.__doc__)
+        runtest(testfunc(), testfunc.func_defaults[0], testfunc.__doc__,
+                testfunc.func_defaults[1:])
