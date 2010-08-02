@@ -133,37 +133,38 @@ def write_err(s):
 
 if __name__ == '__main__':
     import sys
+    width = 10
+
     lst = []
 
     lst.extend([ [], ['>>> Without colors'], [] ])
     line = []
-    line.append( colorize("Standard", None) )
-    line.append( colorize("Bold", None, bold=True) )
-    line.append( colorize("Reverse", None, reverse=True) )
-    line.append( colorize("Bold & Rev", None, bold=True, reverse=True) )
+    line.append( colorize("Standard".ljust(width),      None) )
+    line.append( colorize("Bold".ljust(width),          None, bold=True) )
+    line.append( colorize("Reverse".ljust(width),       None, reverse=True) )
+    line.append( colorize("Bold & Rev".ljust(width),    None, bold=True, reverse=True) )
     lst.append(line)
 
     lst.extend([ [], ['>>> Using colors'], [] ])
     for color in Colors.iter():
         line = []
-        line.append( colorize(color.__name__, color) )
-        line.append( colorize(color.__name__, color, bold=True) )
-        line.append( colorize(color.__name__, color, reverse=True) )
-        line.append( colorize(color.__name__, color, bold=True, reverse=True) )
+        line.append( colorize(color.__name__.ljust(width), color) )
+        line.append( colorize(color.__name__.ljust(width), color, bold=True) )
+        line.append( colorize(color.__name__.ljust(width), color, reverse=True) )
+        line.append( colorize(color.__name__.ljust(width), color, bold=True, reverse=True) )
         lst.append(line)
 
     lst.extend([ [], ['>>> Using highlighting colors'], [] ])
     for color in Colors.iter():
         color = get_highlighter(color.id)
         line = []
-        line.append( colorize(color.__name__, color) )
-        line.append( colorize(color.__name__, color, bold=True) )
-        line.append( colorize(color.__name__, color, reverse=True) )
-        line.append( colorize(color.__name__, color, bold=True, reverse=True) )
+        line.append( colorize(color.__name__.ljust(width), color) )
+        line.append( colorize(color.__name__.ljust(width), color, bold=True) )
+        line.append( colorize(color.__name__.ljust(width), color, reverse=True) )
+        line.append( colorize(color.__name__.ljust(width), color, bold=True, reverse=True) )
         lst.append(line)
 
     for line in lst:
         for item in line:
-            w = len(item) + (10 - len(strip_escapes(item)))
-            sys.stdout.write("%s" % item.ljust(w))
+            sys.stdout.write('%s  ' % item)
         sys.stdout.write("\n")
