@@ -4,6 +4,10 @@
 # url: http://github.com/numerodix/pybits
 
 
+__all__ = ['Colors', 'colorize', 'get_code', 'get_highlighter',
+           'strip_escapes', 'wrap_string', 'write_out', 'write_err']
+
+
 import os
 
 _disable = (not os.environ.get("TERM")) or (os.environ.get("TERM") == "dumb")
@@ -86,6 +90,22 @@ def strip_escapes(s):
     '''Strip escapes from string'''
     import re
     return re.sub('\033[[](?:(?:[0-9]*;)*)(?:[0-9]*m)', '', s)
+
+def write_to(target, s):
+    # assuming we have escapes in the string
+    if not _disable:
+        if not os.isatty(target.fileno()):
+            s = strip_escapes(s)
+    target.write(s)
+    target.flush()
+
+def write_out(s):
+    '''Write a string to stdout, strip escapes if output is a pipe'''
+    write_to(sys.stdout, s)
+
+def write_err(s):
+    '''Write a string to stderr, strip escapes if output is a pipe'''
+    write_to(sys.stderr, s)
 
 
 if __name__ == '__main__':
