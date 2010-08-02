@@ -135,6 +135,7 @@ if __name__ == '__main__':
     import sys
     lst = []
 
+    lst.extend([ [], ['>>> Without colors'], [] ])
     line = []
     line.append( colorize("Standard", None) )
     line.append( colorize("Bold", None, bold=True) )
@@ -142,7 +143,18 @@ if __name__ == '__main__':
     line.append( colorize("Bold & Rev", None, bold=True, reverse=True) )
     lst.append(line)
 
+    lst.extend([ [], ['>>> Using colors'], [] ])
     for color in Colors.iter():
+        line = []
+        line.append( colorize(color.__name__, color) )
+        line.append( colorize(color.__name__, color, bold=True) )
+        line.append( colorize(color.__name__, color, reverse=True) )
+        line.append( colorize(color.__name__, color, bold=True, reverse=True) )
+        lst.append(line)
+
+    lst.extend([ [], ['>>> Using highlighting colors'], [] ])
+    for color in Colors.iter():
+        color = get_highlighter(color.id)
         line = []
         line.append( colorize(color.__name__, color) )
         line.append( colorize(color.__name__, color, bold=True) )
