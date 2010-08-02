@@ -47,7 +47,7 @@ Colors.new("Magenta")
 Colors.new("Cyan")
 Colors.new("White")
 
-## Define colorizing shorthands
+## Define coloring shorthands
 def make_func(color):
     def f(s, bold=False, reverse=False):
         return colorize(s, color, bold=bold, reverse=reverse)
