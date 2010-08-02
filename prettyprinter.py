@@ -2,7 +2,7 @@
 # Licensed under the GNU Public License, version 3.
 #
 # desc: http://www.matusiak.eu/numerodix/blog/index.php/2010/04/25/pretty-printing-for-everyone/
-# url: http://gist.github.com/378503
+# url: http://github.com/numerodix/pybits
 
 
 __all__ = ['pp']
