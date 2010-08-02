@@ -8,12 +8,13 @@ __all__ = ['Colors',
            'black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan',
            'white',
            'colorize', 'get_code', 'get_highlighter',
-           'strip_escapes', 'wrap_string', 'write_out', 'write_err']
+           'strip_escapes', 'wrap_string',
+           'set_term_title', 'write_out', 'write_err']
 
 
 import os
 
-_disable = (not os.environ.get("TERM")) or (os.environ.get("TERM") == "dumb")
+_disabled = (not os.environ.get("TERM")) or (os.environ.get("TERM") == "dumb")
 
 
 class Colors(object):
@@ -70,14 +71,14 @@ highlight_map = {}
 for (n, h) in enumerate(highlights):
     highlight_map[n] = [color for color in Colors.iter() if h == color].pop()
 
-## Exported functions
+## Coloring functions
 def get_highlighter(colorid):
     '''Map a color index to a highlighting color'''
     return highlight_map[colorid % len(highlights)]
 
 def get_code(color, bold=False, reverse=False):
     '''Return escape code for styling with color, bold or reverse'''
-    if _disable:
+    if _disabled:
         return ""
 
     bold = (bold == True) and 1 or 0
@@ -93,7 +94,7 @@ def colorize(s, color, bold=False, reverse=False):
 
 def wrap_string(s, pos, color, bold=False, reverse=False):
     '''Colorize the string up to a position'''
-    if _disable:
+    if _disabled:
         if pos == 0: pos = 1
         return s[:pos-1] + "|" + s[pos:]
 
@@ -107,9 +108,14 @@ def strip_escapes(s):
     import re
     return re.sub('\033[[](?:(?:[0-9]*;)*)(?:[0-9]*m)', '', s)
 
+## Output functions
+def set_term_title(s):
+    if not _disabled:
+        sys.stdout.write("\033]2;%s\007" % s)
+
 def write_to(target, s):
     # assuming we have escapes in the string
-    if not _disable:
+    if not _disabled:
         if not os.isatty(target.fileno()):
             s = strip_escapes(s)
     target.write(s)
