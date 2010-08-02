@@ -4,7 +4,10 @@
 # url: http://github.com/numerodix/pybits
 
 
-__all__ = ['Colors', 'colorize', 'get_code', 'get_highlighter',
+__all__ = ['Colors',
+           'black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan',
+           'white',
+           'colorize', 'get_code', 'get_highlighter',
            'strip_escapes', 'wrap_string', 'write_out', 'write_err']
 
 
@@ -14,6 +17,7 @@ _disable = (not os.environ.get("TERM")) or (os.environ.get("TERM") == "dumb")
 
 
 class Colors(object):
+    '''Container class for colors'''
     @classmethod
     def new(cls, colorname):
         try:
@@ -32,6 +36,7 @@ class Colors(object):
         for color in cls.colorlist:
             yield color
 
+## Define Colors members
 Colors.new("Black")
 Colors.new("Red")
 Colors.new("Green")
@@ -41,8 +46,18 @@ Colors.new("Magenta")
 Colors.new("Cyan")
 Colors.new("White")
 
+## Define colorizing shorthands
+def make_func(color):
+    def f(s, bold=False, reverse=False):
+        return colorize(s, color, bold=bold, reverse=reverse)
+    f.__doc__ = "Colorize string with %s" % color.__name__.lower()
+    return f
 
-_highlights = [
+for color in Colors.iter():
+    globals()[color.__name__.lower()] = make_func(color)
+
+## Define highlighting colors
+highlights = [
     Colors.Green,
     Colors.Yellow,
     Colors.Cyan,
@@ -51,13 +66,14 @@ _highlights = [
     Colors.Red
 ]
 
-_highlight_map = {}
-for (n, h) in enumerate(_highlights):
-    _highlight_map[n] = [color for color in Colors.iter() if h == color].pop()
+highlight_map = {}
+for (n, h) in enumerate(highlights):
+    highlight_map[n] = [color for color in Colors.iter() if h == color].pop()
 
+## Exported functions
 def get_highlighter(colorid):
     '''Map a color index to a highlighting color'''
-    return _highlight_map[colorid % len(_highlights)]
+    return highlight_map[colorid % len(highlights)]
 
 def get_code(color, bold=False, reverse=False):
     '''Return escape code for styling with color, bold or reverse'''
