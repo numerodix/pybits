@@ -81,12 +81,13 @@ def get_code(color, bold=False, reverse=False):
     if _disabled:
         return ""
 
-    bold = (bold == True) and 1 or 0
-    if reverse:
-        return "\033[7m"
-    if not color:
-        return "\033[0m"
-    return "\033[%s;3%sm" % (bold, color.id)
+    bold = (bold == True) and '1' or '0'
+    reverse = (reverse == True) and '7' or ''
+    color = (color != None) and '3%s' % color.id or ''
+
+    lst = ['\033[', bold, reverse, color]
+    lst = filter(lambda s: s != '', lst)
+    return ';'.join(lst) + 'm'
 
 def colorize(s, color, bold=False, reverse=False):
     '''Colorize the string'''
@@ -133,6 +134,14 @@ def write_err(s):
 if __name__ == '__main__':
     import sys
     lst = []
+
+    line = []
+    line.append( colorize("Standard", None) )
+    line.append( colorize("Bold", None, bold=True) )
+    line.append( colorize("Reverse", None, reverse=True) )
+    line.append( colorize("Bold & Rev", None, bold=True, reverse=True) )
+    lst.append(line)
+
     for color in Colors.iter():
         line = []
         line.append( colorize(color.__name__, color) )
