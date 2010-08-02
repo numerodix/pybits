@@ -166,5 +166,5 @@ if __name__ == '__main__':
 
     for line in lst:
         for item in line:
-            sys.stdout.write('%s  ' % item)
-        sys.stdout.write("\n")
+            write_out('%s  ' % item)
+        write_out("\n")
