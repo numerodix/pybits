@@ -13,6 +13,7 @@ __all__ = ['Colors',
 
 
 import os
+import sys
 
 _disabled = (not os.environ.get("TERM")) or (os.environ.get("TERM") == "dumb")
 
@@ -132,7 +133,6 @@ def write_err(s):
 
 
 if __name__ == '__main__':
-    import sys
     width = 10
 
     lst = []
