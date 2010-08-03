@@ -7,11 +7,12 @@
 __all__ = ['Colors',
            'black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan',
            'white',
-           'colorize', 'get_code', 'get_highlighter',
+           'colorize', 'get_code', 'get_highlighter', 'highlight_string',
            'strip_escapes', 'wrap_string',
            'set_term_title', 'write_out', 'write_err']
 
 
+import itertools
 import os
 import sys
 
@@ -105,6 +106,25 @@ def wrap_string(s, pos, color, bold=False, reverse=False):
                          get_code(None),
                          s[pos:])
 
+def highlight_string(s, spans):
+    '''Highlight multiple overlapping spans in a string'''
+    # pair spans with colors -> (span, color)
+    it = itertools.imap(lambda span: (span, get_highlighter(spans.index(span))),
+                        spans)
+
+    cursor = 0
+    segments = []
+    for (span, color) in it:
+        (begin, end) = span
+        segments.append( s[cursor:begin] )
+        segments.append( get_code(color) )
+        segments.append( s[begin:end] )
+        segments.append( get_code(None) )
+        cursor = end
+    segments.append( s[cursor:] )
+
+    return ''.join(segments)
+
 def strip_escapes(s):
     '''Strip escapes from string'''
     import re
@@ -133,38 +153,62 @@ def write_err(s):
 
 
 if __name__ == '__main__':
-    width = 10
+    def test_color():
+        width = 10
 
-    lst = []
+        lst = []
 
-    lst.extend([ [], ['>>> Without colors'], [] ])
-    line = []
-    line.append( colorize("Standard".ljust(width),      None) )
-    line.append( colorize("Bold".ljust(width),          None, bold=True) )
-    line.append( colorize("Reverse".ljust(width),       None, reverse=True) )
-    line.append( colorize("Bold & Rev".ljust(width),    None, bold=True, reverse=True) )
-    lst.append(line)
-
-    lst.extend([ [], ['>>> Using colors'], [] ])
-    for color in Colors.iter():
+        lst.extend([ [], ['>>> Without colors'], [] ])
         line = []
-        line.append( colorize(color.__name__.ljust(width), color) )
-        line.append( colorize(color.__name__.ljust(width), color, bold=True) )
-        line.append( colorize(color.__name__.ljust(width), color, reverse=True) )
-        line.append( colorize(color.__name__.ljust(width), color, bold=True, reverse=True) )
+        line.append( colorize("Standard".ljust(width),      None) )
+        line.append( colorize("Bold".ljust(width),          None, bold=True) )
+        line.append( colorize("Reverse".ljust(width),       None, reverse=True) )
+        line.append( colorize("Bold & Rev".ljust(width),    None, bold=True, reverse=True) )
         lst.append(line)
 
-    lst.extend([ [], ['>>> Using highlighting colors'], [] ])
-    for color in Colors.iter():
-        color = get_highlighter(color.id)
-        line = []
-        line.append( colorize(color.__name__.ljust(width), color) )
-        line.append( colorize(color.__name__.ljust(width), color, bold=True) )
-        line.append( colorize(color.__name__.ljust(width), color, reverse=True) )
-        line.append( colorize(color.__name__.ljust(width), color, bold=True, reverse=True) )
-        lst.append(line)
+        lst.extend([ [], ['>>> Using colors'], [] ])
+        for color in Colors.iter():
+            line = []
+            line.append( colorize(color.__name__.ljust(width), color) )
+            line.append( colorize(color.__name__.ljust(width), color, bold=True) )
+            line.append( colorize(color.__name__.ljust(width), color, reverse=True) )
+            line.append( colorize(color.__name__.ljust(width), color, bold=True, reverse=True) )
+            lst.append(line)
 
-    for line in lst:
-        for item in line:
-            write_out('%s  ' % item)
-        write_out("\n")
+        lst.extend([ [], ['>>> Using highlighting colors'], [] ])
+        for color in Colors.iter():
+            color = get_highlighter(color.id)
+            line = []
+            line.append( colorize(color.__name__.ljust(width), color) )
+            line.append( colorize(color.__name__.ljust(width), color, bold=True) )
+            line.append( colorize(color.__name__.ljust(width), color, reverse=True) )
+            line.append( colorize(color.__name__.ljust(width), color, bold=True, reverse=True) )
+            lst.append(line)
+
+        for line in lst:
+            for item in line:
+                write_out('%s  ' % item)
+            write_out("\n")
+
+    def test_highlight():
+        import re
+        rx = '[a-zA-Z]+'
+        s = 'sdf kjhk3jh 3kjas kj j2 2adsk ka23\nasdw3 2asdf23f d 2\n2asdfs as23r2sdfsdf2334f3'
+        spans = []
+        for m in re.finditer(rx, s):
+            spans.append(m.span())
+        s = highlight_string(s, spans)
+        print(s)
+
+
+    try:
+        action = sys.argv[1]
+    except IndexError:
+        print("Usage:  %s [ --color | --highlight ]" % sys.argv[0])
+        sys.exit(1)
+
+    if action == '--color':
+        test_color()
+    elif action == '--highlight':
+        test_highlight()
+
