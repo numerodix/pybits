@@ -106,13 +106,20 @@ def wrap_string(s, pos, color, bold=False, reverse=False):
                          get_code(None),
                          s[pos:])
 
-def highlight_string(s, spans):
-    '''Highlight multiple overlapping (up to 4 layers) spans in a string'''
-    # sort by start position
-    spans.sort(key=lambda (begin,end): begin)
-
+def highlight_string(s, *spanlists):
+    '''Highlight spans in a string
+    @spanlists is on the form [(begin,end)*]*
+    Each spanlist gets a new color
+    Spans can overlap up to 4 layers
+    '''
     # pair span with color -> (span, color)
-    tuples = map(lambda span: (span, get_highlighter(spans.index(span))), spans)
+    tuples = []
+    for spanlist in spanlists:
+        get_color = lambda spanlist: get_highlighter(spanlists.index(spanlist))
+        tuples.extend( [(span, get_color(spanlist)) for span in spanlist] )
+
+    # sort by start position
+    tuples.sort(key=lambda ((begin,end),color): begin)
 
     # produce list of (pos,color) pairs
     # (begin, Red)   # start new color
@@ -234,11 +241,13 @@ if __name__ == '__main__':
 <a href="http://www.domain.com/path?action=load">
 """
         def display(rxs, s):
-            spans = []
+            spanlists = []
             for rx in rxs:
+                spanlist = []
                 for m in re.finditer(rx, s):
-                    spans.append(m.span())
-            s = highlight_string(s, spans)
+                    spanlist.append(m.span())
+                spanlists.append(spanlist)
+            s = highlight_string(s, *spanlists)
             for (i,rx) in enumerate(rxs):
                 write_out('Regex %s: %s\n' % (i,rx))
             write_out(s)
