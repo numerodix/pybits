@@ -226,13 +226,12 @@ if __name__ == '__main__':
             'http://[a-zA-Z0-9.]+',
             'http://[a-zA-Z0-9.-]+',
             'http://[a-zA-Z0-9./?=]+',
-            'ftp://[a-zA-Z0-9./]+',
+            'www',
         ]
         s = """\
 <a href="http://www.do-main.com">
 <a href="http://www.domain.com/path">
 <a href="http://www.domain.com/path?action=load">
-<a href="ftp://www.domain.com/path">
 """
         def display(rxs, s):
             spans = []
