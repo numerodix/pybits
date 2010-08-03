@@ -107,20 +107,50 @@ def wrap_string(s, pos, color, bold=False, reverse=False):
                          s[pos:])
 
 def highlight_string(s, spans):
-    '''Highlight multiple overlapping spans in a string'''
-    # pair spans with colors -> (span, color)
-    it = itertools.imap(lambda span: (span, get_highlighter(spans.index(span))),
-                        spans)
+    '''Highlight multiple overlapping (up to 4 layers) spans in a string'''
+    # sort by start position
+    spans.sort(key=lambda (begin,end): begin)
+
+    # pair span with color -> (span, color)
+    tuples = map(lambda span: (span, get_highlighter(spans.index(span))), spans)
+
+    # produce list of (pos,color) pairs
+    # (begin, Red)   # start new color
+    # (end, None)    # end current color
+    markers = []
+    for i in tuples:
+        (begin,end),color = i
+        markers.append( (begin, color) )
+        markers.append( (end, None) )
+    markers.sort(key=lambda (pos,color): pos)
 
     cursor = 0
+    stack = []
     segments = []
-    for (span, color) in it:
-        (begin, end) = span
-        segments.append( s[cursor:begin] )
-        segments.append( get_code(color) )
-        segments.append( s[begin:end] )
-        segments.append( get_code(None) )
-        cursor = end
+    for (pos, color) in markers:
+        fmt_color = color
+        fmt_bold = False
+        fmt_reverse = False
+
+        if color:
+            stack.append(color)
+        else:
+            stack.pop()
+
+        if len(stack) > 0:
+            fmt_color = stack[-1:].pop()
+        if len(stack) == 2:
+            fmt_bold = True
+        if len(stack) == 3:
+            fmt_reverse = True
+        if len(stack) == 4:
+            fmt_bold = True
+            fmt_reverse = True
+
+        segments.append( s[cursor:pos] )
+        segments.append( get_code(fmt_color, bold=fmt_bold, reverse=fmt_reverse) )
+
+        cursor = pos
     segments.append( s[cursor:] )
 
     return ''.join(segments)
@@ -192,13 +222,31 @@ if __name__ == '__main__':
 
     def test_highlight():
         import re
-        rx = '[a-zA-Z]+'
-        s = 'sdf kjhk3jh 3kjas kj j2 2adsk ka23\nasdw3 2asdf23f d 2\n2asdfs as23r2sdfsdf2334f3'
-        spans = []
-        for m in re.finditer(rx, s):
-            spans.append(m.span())
-        s = highlight_string(s, spans)
-        print(s)
+        rxs = [
+            'http://[a-zA-Z0-9.]+',
+            'http://[a-zA-Z0-9.-]+',
+            'http://[a-zA-Z0-9./?=]+',
+            'ftp://[a-zA-Z0-9./]+',
+        ]
+        s = """\
+<a href="http://www.do-main.com">
+<a href="http://www.domain.com/path">
+<a href="http://www.domain.com/path?action=load">
+<a href="ftp://www.domain.com/path">
+"""
+        def display(rxs, s):
+            spans = []
+            for rx in rxs:
+                for m in re.finditer(rx, s):
+                    spans.append(m.span())
+            s = highlight_string(s, spans)
+            for (i,rx) in enumerate(rxs):
+                write_out('Regex %s: %s\n' % (i,rx))
+            write_out(s)
+
+        for i in range(0, len(rxs) + 1):
+            write_out('\n')
+            display(rxs[:i], s)
 
 
     try:
