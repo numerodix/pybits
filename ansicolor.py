@@ -16,6 +16,7 @@ import itertools
 import os
 import sys
 
+# Don't write escapes to dumb terminals
 _disabled = (not os.environ.get("TERM")) or (os.environ.get("TERM") == "dumb")
 
 
