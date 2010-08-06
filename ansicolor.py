@@ -247,10 +247,13 @@ if __name__ == '__main__':
         rxs = [
             'b+c+d+e+',
             'e+f+',
-            'a+b+',
+            'a*b+',
+            'i+',
+            'h+i+j+',
         ]
         s = """\
 aaabbbcccdddeeefffggghhhiiijjjkkk
+cccdddeeefffgggiii
 """
         def display(rxs, s):
             spanlists = []
@@ -261,7 +264,9 @@ aaabbbcccdddeeefffggghhhiiijjjkkk
                 spanlists.append(spanlist)
             s = highlight_string(s, *spanlists)
             for (i,rx) in enumerate(rxs):
-                write_out('Regex %s: %s\n' % (i,rx))
+                color = get_highlighter(i)
+                color = colorize(color.__name__.ljust(10), color)
+                write_out('Regex %s: %s %s\n' % (i, color, rx))
             write_out(s)
 
         for i in range(0, len(rxs) + 1):
