@@ -1,6 +1,7 @@
 # Author: Martin Matusiak <numerodix@gmail.com>
 # Licensed under the GNU Public License, version 3.
 #
+# desc: http://www.matusiak.eu/numerodix/blog/index.php/2010/08/06/ansicolor-because-the-view-is-better-in-colors/
 # url: http://github.com/numerodix/pybits
 
 
