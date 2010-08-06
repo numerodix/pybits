@@ -84,11 +84,16 @@ def get_code(color, bold=False, reverse=False):
     if _disabled:
         return ""
 
-    bold = (bold == True) and '1' or '0'
-    reverse = (reverse == True) and '7' or ''
+    fmt = '0;0'
+    if bold and reverse:
+        fmt = '1;7'
+    elif reverse:
+        fmt = '0;7'
+    elif bold:
+        fmt = '0;1'
     color = (color != None) and '3%s' % color.id or ''
 
-    lst = [bold, reverse, color]
+    lst = [fmt, color]
     lst = filter(lambda s: s != '', lst)
     return '\033[' + ';'.join(lst) + 'm'
 
@@ -165,7 +170,7 @@ def highlight_string(s, *spanlists):
             bold = True
         if layer == 3:
             reverse = True
-        if layer == 4:
+        if layer >= 4:
             bold = True
             reverse = True
 
@@ -174,7 +179,7 @@ def highlight_string(s, *spanlists):
 
         cursor = pos
     segments.append( s[cursor:] )
-#    print segments
+
     return ''.join(segments)
 
 def strip_escapes(s):
@@ -245,15 +250,14 @@ if __name__ == '__main__':
     def test_highlight():
         import re
         rxs = [
-            'b+c+d+e+',
-            'e+f+',
-            'a*b+',
-            'i+',
-            'h+i+j+',
+            '(b+).*\\1',
+            '(c+).*\\1',
+            '(d+).*\\1',
+            '(e+).*\\1',
         ]
         s = """\
-aaabbbcccdddeeefffggghhhiiijjjkkk
-cccdddeeefffgggiii
+aaabbbcccdddeeefffeeedddcccbbbaaa
+fffeeedddcccbbbaaabbbcccdddeeefff
 """
         def display(rxs, s):
             spanlists = []
