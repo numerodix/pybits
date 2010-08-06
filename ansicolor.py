@@ -13,7 +13,6 @@ __all__ = ['Colors',
            'set_term_title', 'write_out', 'write_err']
 
 
-import itertools
 import os
 import sys
 
