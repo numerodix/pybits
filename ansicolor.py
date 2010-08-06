@@ -116,51 +116,65 @@ def highlight_string(s, *spanlists):
     # pair span with color -> (span, color)
     tuples = []
     for spanlist in spanlists:
-        get_color = lambda spanlist: get_highlighter(spanlists.index(spanlist))
-        tuples.extend( [(span, get_color(spanlist)) for span in spanlist] )
+        get_id = lambda spanlist: spanlists.index(spanlist)
+        get_color = lambda spanlist: get_highlighter(get_id(spanlist))
+        tuples.extend( [(span, get_color(spanlist), get_id(spanlist))
+                        for span in spanlist] )
 
-    # sort by start position
-    tuples.sort(key=lambda ((begin,end),color): begin)
-
-    # produce list of (pos,color) pairs
-    # (begin, Red)   # start new color
-    # (end, None)    # end current color
+    # produce list of (pos,color,start_end) pairs
+    # (begin, Red, True)   # start new color
+    # (end, Red, False)    # end current color
     markers = []
     for i in tuples:
-        (begin,end),color = i
-        markers.append( (begin, color) )
-        markers.append( (end, None) )
-    markers.sort(key=lambda (pos,color): pos)
+        (begin,end),color,list_id = i
+        markers.append( (begin, color, True, list_id) )
+        markers.append( (end, color, False, list_id) )
+    markers.sort(key=lambda (pos,color,start_end,list_id): pos)
 
-    cursor = 0
+    # produce list of (pos, color, layer) pairs
+    codes = []
     stack = []
-    segments = []
-    for (pos, color) in markers:
-        fmt_color = color
-        fmt_bold = False
-        fmt_reverse = False
-
-        if color:
-            stack.append(color)
+    for (pos, color, start_end, list_id) in markers:
+        # stack invariant :  list_id1 < list_id2   =>   i1 < i2
+        if start_end:
+            inserted = False
+            for (i, (c,id)) in enumerate(stack):
+                if list_id < id:
+                    stack.insert(i, (color, list_id) )
+                    inserted = True
+                    break
+            if not inserted:
+                stack.append( (color, list_id) )
         else:
-            stack.pop()
+            stack.remove( (color,list_id) )
 
+        cur_color = None
         if len(stack) > 0:
-            fmt_color = stack[-1:].pop()
-        if len(stack) == 2:
-            fmt_bold = True
-        if len(stack) == 3:
-            fmt_reverse = True
-        if len(stack) == 4:
-            fmt_bold = True
-            fmt_reverse = True
+            (cur_color, _) = stack[-1]
+
+        codes.append( (pos, cur_color, len(stack)) )
+
+    # apply codes to the string
+    cursor = 0
+    segments = []
+    for (pos, color, layer) in codes:
+        bold = False
+        reverse = False
+
+        if layer == 2:
+            bold = True
+        if layer == 3:
+            reverse = True
+        if layer == 4:
+            bold = True
+            reverse = True
 
         segments.append( s[cursor:pos] )
-        segments.append( get_code(fmt_color, bold=fmt_bold, reverse=fmt_reverse) )
+        segments.append( get_code(color, bold=bold, reverse=reverse) )
 
         cursor = pos
     segments.append( s[cursor:] )
-
+#    print segments
     return ''.join(segments)
 
 def strip_escapes(s):
@@ -231,15 +245,12 @@ if __name__ == '__main__':
     def test_highlight():
         import re
         rxs = [
-            'http://[a-zA-Z0-9.]+',
-            'http://[a-zA-Z0-9.-]+',
-            'http://[a-zA-Z0-9./?=]+',
-            'www',
+            'b+c+d+e+',
+            'e+f+',
+            'a+b+',
         ]
         s = """\
-<a href="http://www.do-main.com">
-<a href="http://www.domain.com/path">
-<a href="http://www.domain.com/path?action=load">
+aaabbbcccdddeeefffggghhhiiijjjkkk
 """
         def display(rxs, s):
             spanlists = []
