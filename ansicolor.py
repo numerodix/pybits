@@ -187,6 +187,7 @@ def strip_escapes(s):
 
 ## Output functions
 def set_term_title(s):
+    '''Set the title of a terminal window'''
     if not _disabled:
         sys.stdout.write("\033]2;%s\007" % s)
 
