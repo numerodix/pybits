@@ -110,9 +110,10 @@ def wrap_string(s, pos, color, bold=False, reverse=False):
                          get_code(None),
                          s[pos:])
 
-def highlight_string(s, *spanlists):
+def highlight_string(s, *spanlists, **kw):
     '''Highlight spans in a string
     @spanlists is on the form [(begin,end)*]*
+    @kw can set bold, reverse, nocolor
     Each spanlist gets a new color
     Spans can overlap up to 4 layers
     '''
@@ -163,6 +164,13 @@ def highlight_string(s, *spanlists):
     for (pos, color, layer) in codes:
         bold = False
         reverse = False
+
+        # allow bold/reverse/nocolor styling as parameters
+        if color:
+            if kw.get('nocolor'):
+                color = None
+            bold = kw.get('bold') or bold
+            reverse = kw.get('reverse') or reverse
 
         if layer == 2:
             bold = True
