@@ -8,11 +8,12 @@
 __all__ = ['Colors',
            'black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan',
            'white',
-           'colorize', 'get_code', 'get_highlighter', 'highlight_string',
+           'colorize', 'diff', 'get_code', 'get_highlighter', 'highlight_string',
            'strip_escapes', 'wrap_string',
            'set_term_title', 'write_out', 'write_err']
 
 
+import difflib
 import os
 import sys
 
@@ -190,6 +191,85 @@ def highlight_string(s, *spanlists, **kw):
 
     return ''.join(segments)
 
+def diff(x, y, color_x=Colors.Cyan, color_y=Colors.Green, debug=False):
+    """Format diff of inputs using longest common subsequence"""
+    def compute_seq(x, y):
+        """SequenceMatcher computes the longest common contiguous subsequence
+        rather than the longest common subsequence, but this just causes the
+        diff to show more changed characters, the result is still correct"""
+        sm = difflib.SequenceMatcher(None, x, y)
+        seq = ''
+        for match in sm.get_matching_blocks():
+            seq += x[match.a:match.a+match.size]
+        return seq
+
+    def make_generator(it):
+        g = ((i,e) for (i,e) in enumerate(it))
+        def f():
+            try:
+                return g.next()
+            except StopIteration:
+                return (-1, None)
+        return f
+
+    def log(s):
+        if debug:
+            print(s)
+
+    seq = compute_seq(x, y)
+    log(">>>  %s , %s  -> %s" % (x, y, seq))
+
+    it_seq = make_generator(seq)
+    it_x = make_generator(x)
+    it_y = make_generator(y)
+
+    (sid, s) = it_seq()
+    (aid, a) = it_x()
+    (bid, b) = it_y()
+
+    x_spans = []
+    y_spans = []
+
+    while True:
+        if not any([s, a, b]):
+            break
+
+        # character the same in all sets
+        #   -> unchanged
+        if s == a == b:
+            log(' %s' % s)
+            (sid, s) = it_seq()
+            (aid, a) = it_x()
+            (bid, b) = it_y()
+        # character the same in orig and common
+        #   -> added in new
+        elif s == a:
+            log('+%s' % b)
+            y_spans.append( (bid,bid+1) )
+            (bid, b) = it_y()
+        # character the same in new and common
+        #   -> removed in orig
+        elif s == b:
+            log('-%s' % a)
+            x_spans.append( (aid,aid+1) )
+            (aid, a) = it_x()
+        # character not the same (eg. case change)
+        #   -> removed in orig and added in new
+        elif a != b:
+            if a:
+                log('-%s' % a)
+                x_spans.append( (aid,aid+1) )
+                (aid, a) = it_x()
+            if b:
+                log('+%s'% b)
+                y_spans.append( (bid,bid+1) )
+                (bid, b) = it_y()
+
+    x_fmt = highlight_string(x, x_spans, reverse=True, color=color_x)
+    y_fmt = highlight_string(y, y_spans, reverse=True, color=color_y)
+
+    return x_fmt, y_fmt
+
 def strip_escapes(s):
     '''Strip escapes from string'''
     import re
@@ -286,15 +366,30 @@ fffeeedddcccbbbaaabbbcccdddeeefff
             write_out('\n')
             display(rxs[:i], s)
 
+    def test_diff():
+        def display_diff(s, t):
+            (s_fmt, t_fmt) = diff(s, t)
+            write_out('>>> %s\n' % s_fmt)
+            write_out('    %s\n\n' % t_fmt)
+
+        display_diff('first last', 'First Last')
+        display_diff('the the boss', 'the boss')
+        display_diff('the coder', 'the first coder')
+        display_diff('agcat', 'gac')
+        display_diff('XMJYAUZ', 'MZJAWXU')
+        display_diff('abcdfghjqz', 'abcdefgijkrxyz')
+
 
     try:
         action = sys.argv[1]
     except IndexError:
-        print("Usage:  %s [ --color | --highlight ]" % sys.argv[0])
+        print("Usage:  %s [ --color | --highlight | --diff ]" % sys.argv[0])
         sys.exit(1)
 
     if action == '--color':
         test_color()
     elif action == '--highlight':
         test_highlight()
+    elif action == '--diff':
+        test_diff()
 
