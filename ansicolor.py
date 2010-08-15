@@ -8,7 +8,7 @@
 __all__ = ['Colors',
            'black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan',
            'white',
-           'colorize', 'diff', 'get_code', 'get_highlighter', 'highlight_string',
+           'colorize', 'colordiff', 'get_code', 'get_highlighter', 'highlight_string',
            'justify_formatted', 'strip_escapes', 'wrap_string',
            'set_term_title', 'write_out', 'write_err']
 
@@ -191,7 +191,7 @@ def highlight_string(s, *spanlists, **kw):
 
     return ''.join(segments)
 
-def diff(x, y, color_x=Colors.Cyan, color_y=Colors.Green, debug=False):
+def colordiff(x, y, color_x=Colors.Cyan, color_y=Colors.Green, debug=False):
     """Format diff of inputs using longest common subsequence"""
     def compute_seq(x, y):
         """SequenceMatcher computes the longest common contiguous subsequence
@@ -373,7 +373,7 @@ fffeeedddcccbbbaaabbbcccdddeeefff
 
     def test_diff():
         def display_diff(s, t):
-            (s_fmt, t_fmt) = diff(s, t)
+            (s_fmt, t_fmt) = colordiff(s, t)
             write_out('>>> %s\n' % s_fmt)
             write_out('    %s\n\n' % t_fmt)
 
