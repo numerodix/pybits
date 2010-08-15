@@ -9,7 +9,7 @@ __all__ = ['Colors',
            'black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan',
            'white',
            'colorize', 'diff', 'get_code', 'get_highlighter', 'highlight_string',
-           'strip_escapes', 'wrap_string',
+           'justify_formatted', 'strip_escapes', 'wrap_string',
            'set_term_title', 'write_out', 'write_err']
 
 
@@ -269,6 +269,11 @@ def diff(x, y, color_x=Colors.Cyan, color_y=Colors.Green, debug=False):
     y_fmt = highlight_string(y, y_spans, reverse=True, color=color_y)
 
     return x_fmt, y_fmt
+
+def justify_formatted(s, justify_func, width):
+    '''Justify formatted string to width using function (eg. string.ljust)'''
+    dx = len(s) - len(strip_escapes(s))
+    return justify_func(s, width+dx)
 
 def strip_escapes(s):
     '''Strip escapes from string'''
