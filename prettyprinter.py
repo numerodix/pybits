@@ -1,6 +1,8 @@
 # Author: Martin Matusiak <numerodix@gmail.com>
 # Licensed under the GNU Public License, version 3.
 #
+# <desc> Generic pretty printer of python objects </desc>
+#
 # desc: http://www.matusiak.eu/numerodix/blog/index.php/2010/04/25/pretty-printing-for-everyone/
 # url: http://github.com/numerodix/pybits
 
