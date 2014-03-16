@@ -3,5 +3,5 @@ NOTE: The modules in this repo are now being maintained in dedicated repositorie
 - `ansicolor`_
 - `printobject`_
 
-.. `ansicolor`: https://github.com/numerodix/ansicolor
-.. `printobject`: https://github.com/numerodix/printobject
+.. _`ansicolor`: https://github.com/numerodix/ansicolor
+.. _`printobject`: https://github.com/numerodix/printobject
